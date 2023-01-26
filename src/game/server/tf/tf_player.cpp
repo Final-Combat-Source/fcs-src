@@ -3299,13 +3299,20 @@ void CTFPlayer::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, 
 
 	CTakeDamageInfo info_modified = info;
 
-	if ( info_modified.GetDamageType() & DMG_USE_HITLOCATIONS )
+	CTFWeaponBase* pWpn = pAttacker->GetActiveTFWeapon();
+
+	int nCanUseHitLocations = 0;
+
+	CALL_ATTRIB_HOOK_INT_ON_OTHER(pWpn, nCanUseHitLocations, use_hit_locations);
+	
+
+	if (nCanUseHitLocations || (info_modified.GetDamageType() & DMG_USE_HITLOCATIONS) )
 	{
 		switch ( ptr->hitgroup )
 		{
 		case HITGROUP_HEAD:
 			{
-				CTFWeaponBase *pWpn = pAttacker->GetActiveTFWeapon();
+				
 
 				float flDamage = info_modified.GetDamage();
 				bool bCritical = true;
@@ -3315,6 +3322,37 @@ void CTFPlayer::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, 
 					bCritical = false;
 				}
 
+				int nMiniCritForHeadShot = 0;
+				
+				CALL_ATTRIB_HOOK_INT_ON_OTHER(pWpn, nMiniCritForHeadShot, minicrit_on_headshot);
+
+
+				if (nMiniCritForHeadShot)
+				{
+					if (pAttacker->m_Shared.InCond(TF_COND_ZOOMED))
+					{
+						bCritical = true;
+						
+					}
+					else
+					{
+						bCritical = false;
+						info_modified.AddDamageType(DMG_MINICRITICAL);
+						info_modified.SetDamageCustom(TF_DMG_CUSTOM_HEADSHOT);
+
+						// play the critical shot sound to the shooter	
+						if (pWpn)
+						{
+
+							pWpn->WeaponSound(BURST);
+
+							//CALL_ATTRIB_HOOK_FLOAT_ON_OTHER(pWpn, flDamage, headshot_damage_modify);
+						}
+					}
+					
+
+					
+				}
 				if ( bCritical )
 				{
 					info_modified.AddDamageType( DMG_CRITICAL );

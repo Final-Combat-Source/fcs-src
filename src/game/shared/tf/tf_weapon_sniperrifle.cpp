@@ -534,7 +534,7 @@ int	CTFSniperRifle::GetDamageType( void ) const
 	if ( pPlayer && pPlayer->m_Shared.InCond( TF_COND_ZOOMED ) )
 		return BaseClass::GetDamageType();
 
-	return ( BaseClass::GetDamageType() & ~DMG_USE_HITLOCATIONS );
+	return ( BaseClass::GetDamageType() );
 }
 
 //-----------------------------------------------------------------------------
